@@ -38,13 +38,13 @@ public class sms_activity extends Activity implements TextMessageCallback{
     /**
      * android voodoo to be notified with txt messages
      */
-    private void listenForSMS() {
+    private void acceptSMS() {
         //launch the relay service which creates callbacks/interrupts
         //for when an sms arrives
 
         callbackSMS = new InterruptSMS();
         infil    = new IntentFilter();
-        infil.addAction("android.provider.Telephony.RECEIVE_SMS");
+        infil.addAction("android.provider.Telephony.SMS_DELIVER");
         registerReceiver(callbackSMS, infil);
 
     }
@@ -55,27 +55,19 @@ public class sms_activity extends Activity implements TextMessageCallback{
      * @param e
      */
     public void init() {
-        listenForSMS();
-        //TODO: 4/10 idk why but the power lock mngr thingy is broken....
-/*        PowerManager mgr = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakeLock");
-        wakeLock.acquire();*/
+	if (Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName())) {
+	    log("Ready to relay messages!");
+	} else {
+	    log("We are not currently able to relay messages ;(");
+	}
+        acceptSMS();
         serverSMS = new IncomingThread(this);
         serverSMS.start();
-
-
     }
-
-    /* btn events */
-    public void parseIP(View e) {
-        //EditText inputField = (EditText) findViewById(R.id.ipInput);
-        //serverIP = inputField.getText().toString();
-        //updateServerIP();
-        //DO NOTHING!!!
-
+    private void log(String line) {
+	System.out.println(line);
     }
     public void killServer(View e) {
-        wakeLock.release();
         unregisterReceiver(callbackSMS);
         serverSMS.destroy();
 
