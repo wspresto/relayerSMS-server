@@ -12,12 +12,12 @@ import java.net.UnknownHostException;
 import android.content.IntentFilter;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.telephony.SmsManager;
+
 import android.provider.Telephony;
 import android.view.View;
 
 
-public class sms_activity extends Activity implements TextMessageCallback{
+public class sms_activity extends Activity {
 
     /*==									RELAYER SMS 									==*/
     private InterruptSMS callbackSMS;
@@ -25,15 +25,12 @@ public class sms_activity extends Activity implements TextMessageCallback{
     IncomingThread serverSMS;
     private final int incomingPort = 8080; //sms messages from the world
 
-    WakeLock wakeLock; //kudos to stack overflow lol
-
     private class IncomingThread extends Thread{ //sms messages to the world, incoming from netbook
-        TextMessageCallback callOnMe;
-        public IncomingThread(TextMessageCallback callMe) {
-            callOnMe = callMe;
+        public IncomingThread() {
+
         }
         public void run() {
-            new TextMessageServer(callOnMe, incomingPort);
+            new TextMessageServer(incomingPort);
         }
     }
     /**
@@ -45,26 +42,12 @@ public class sms_activity extends Activity implements TextMessageCallback{
 
         callbackSMS = new InterruptSMS();
         infil    = new IntentFilter();
-        infil.addAction("android.provider.Telephony.SMS_DELIVER");
+        infil.addAction("android.provider.Telephony.SMS_DELIVER"); //IS THIS NEEDED?!?!
         registerReceiver(callbackSMS, infil);
-
     }
 
-    /**
-     * create a server thread.
-     * register an sms callback
-     * @param e
-     */
-    public void init() {
-	if (Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName())) {
-	    log("We are the default messaging app");
-	} else {
-	    log("We are not currently the default messaging app");
-	}
-        acceptSMS();
-        serverSMS = new IncomingThread(this);
-        serverSMS.start();
-    }
+
+
     private void log(String line) {
 	System.out.println(line);
     }
@@ -76,18 +59,11 @@ public class sms_activity extends Activity implements TextMessageCallback{
     }
 
     @Override
-    public void processTextMessage(TextMessage msg) {
-        SmsManager mail = SmsManager.getDefault();
-        mail.sendTextMessage(msg.getID(), null, msg.getMessage(), null, null);
-
-    }
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sms_activity);
         init();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -106,5 +82,16 @@ public class sms_activity extends Activity implements TextMessageCallback{
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void init() {
+        if (Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName())) {
+            log("We are the default messaging app");
+        } else {
+            log("We are not currently the default messaging app");
+        }
+        acceptSMS();
+        serverSMS = new IncomingThread();
+        serverSMS.start();
     }
 }

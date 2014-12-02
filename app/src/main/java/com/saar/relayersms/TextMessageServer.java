@@ -2,6 +2,7 @@ package com.saar.relayersms;
 import java.io.OutputStream;
 import java.net.*;
 import java.util.*;
+import android.telephony.SmsManager;
 
 /**
  * TMS will receive sms notifications.
@@ -9,13 +10,13 @@ import java.util.*;
  * @author keiser88
  *
  */
-public class TextMessageServer {
+public class TextMessageServer implements TextMessageCallback{
     public static ArrayList<TextMessage> msgQueue;
 	TextMessageCallback callback;
 	int serverPort;
 	ServerSocket socks;
 	byte [] txt;
-	public TextMessageServer(TextMessageCallback callback, int port) {
+	public TextMessageServer(int port) {
         msgQueue = new ArrayList<TextMessage>(); //save the txt messages for the current session
 		socks = null;
 		serverPort = port;
@@ -97,8 +98,15 @@ public class TextMessageServer {
 		}
 		msg.setHeader(header);
 		msg.setTextMessage(0, txt);
-		callback.processTextMessage(msg);
+		processTextMessage(msg);
 	}
+
+    @Override
+    public void processTextMessage(TextMessage msg) {
+        SmsManager mail = SmsManager.getDefault();
+        mail.sendTextMessage(msg.getID(), null, msg.getMessage(), null, null);
+
+    }
     private void errLog(String line) {
         System.out.println(line);
     }
