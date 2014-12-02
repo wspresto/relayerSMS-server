@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.telephony.SmsManager;
+import android.provider.Telephony;
 import android.view.View;
 
 
@@ -56,9 +57,9 @@ public class sms_activity extends Activity implements TextMessageCallback{
      */
     public void init() {
 	if (Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName())) {
-	    log("Ready to relay messages!");
+	    log("We are the default messaging app");
 	} else {
-	    log("We are not currently able to relay messages ;(");
+	    log("We are not currently the default messaging app");
 	}
         acceptSMS();
         serverSMS = new IncomingThread(this);

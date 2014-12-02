@@ -1,4 +1,6 @@
 package com.saar.relayersms;
+import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  * Represents a text message.
@@ -8,14 +10,19 @@ package com.saar.relayersms;
 public class TextMessage {
 	char [] txt;
 	char [] header;
+    private String timestamp;
+
 	int carCount;
 	final public static int headerSize      = 80;
 	final public static int textMessageSize = 160;
-	
+
 	public TextMessage() {
 		txt    = new char[textMessageSize]; //limit of 160 characters
 		header = new char[headerSize];
 		carCount = 0;
+        timestamp = new Timestamp(new Date().getTime()).toString();
+
+
 	}
 	public void processHeader(byte [] bites) {
 		//TODO: glean header information... model after relational database <id,name>
@@ -72,6 +79,9 @@ public class TextMessage {
 			return id;
 		
 	}
+    public String getTimestamp() {
+        return this.timestamp;
+    }
 	public String getMessage() {
 		String msg = new String(txt);
 		msg        = msg.replace((char) 0, ' ');
@@ -82,6 +92,8 @@ public class TextMessage {
         String JSON = "\"content\"" + ":" +"\"" + this.getMessage() + "\"";
         JSON       += ",";
         JSON       += "\"author\"" + ":" +"\"" + this.getSender() + "\"";
+        JSON       += ",";
+        JSON       += "\"timestamp\"" + ":" +"\"" + this.getTimestamp() + "\"";
         return "{"+JSON+"}";
     }
 	public char [] getTxt() {

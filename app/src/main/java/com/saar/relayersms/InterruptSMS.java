@@ -13,7 +13,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
-import android.telephony.gsm.SmsMessage;
+import android.telephony.SmsMessage;
+
 
 /**
  * Essentially this entire object is copy pasted from stackoverflow. It's like wow, well theres only one way to get the information we need.
@@ -23,10 +24,6 @@ import android.telephony.gsm.SmsMessage;
  */
 public class InterruptSMS extends BroadcastReceiver {
 
-    private static final String ACTION_SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
-    private Context mContext;
-    private Intent mIntent;
-
     private void errLog(String line) {
         System.out.println(line);
     }
@@ -35,51 +32,42 @@ public class InterruptSMS extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         Bundle extras = intent.getExtras();
-
+        errLog("broadcast detected.");
         if ( extras != null )
         {
-
             Object[] smsextras = (Object[]) extras.get( "pdus" );
 
             for ( int i = 0; i < smsextras.length; i++ )
             {
-
                 SmsMessage smsmsg = SmsMessage.createFromPdu((byte[])smsextras[i]);
-                String str = smsmsg.getMessageBody().toString();
-                Uri uri = Uri.withAppendedPath(
-                        ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
-                        Uri.encode(smsmsg.getOriginatingAddress()));
+                String str = smsmsg.getMessageBody();
 
+                Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(smsmsg.getOriginatingAddress()));
 
-                String name = "?";
-
-                ContentResolver contentResolver = context.getContentResolver();
-                Cursor contactLookup = contentResolver.query(uri, new String[] {
-                        BaseColumns._ID, ContactsContract.PhoneLookup.DISPLAY_NAME },
-                        null, null, null);
-
+                Cursor c = context.getContentResolver().query(uri, new String[]{ContactsContract.Data.DISPLAY_NAME},null,null,null);
                 try {
-                    if (contactLookup != null && contactLookup.getCount() > 0) {
-                        contactLookup.moveToNext();
-                        name = contactLookup.getString(contactLookup
-                                .getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
-                        // String contactId =
-                        // contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID));
-                    }
-                } catch(Exception e) {
+                    c.moveToFirst();
+                    String  displayName = c.getString(0);
+                    String ContactName = displayName;
 
+                    TextMessage sms = new TextMessage();
+                    sms.setTextMessage(0, str.getBytes());
+
+                    String address = ContactName + "," + smsmsg.getOriginatingAddress();
+
+                    sms.setHeader(address.getBytes());
+
+                    TextMessageServer.push(sms);
+
+
+/*                    errLog("TEXT:" + str);
+                    errLog("SentBy:" + ContactName);*/
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }finally{
+                    c.close();
                 }
 
-                /*     do code               */
-                TextMessage sms = new TextMessage();
-                sms.setTextMessage(0, str.getBytes());
-
-                String address = name + "," + smsmsg.getOriginatingAddress();
-
-                sms.setHeader(address.getBytes());
-                    
-                TextMessageServer.msgQueue.add(sms);
-                errLog("SMS RECEIVED!!!");
                 }
 
             }   

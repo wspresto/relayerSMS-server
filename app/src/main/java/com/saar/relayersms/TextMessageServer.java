@@ -72,11 +72,15 @@ public class TextMessageServer {
                 client.close();
 
 			} catch(Exception e) {
-				errLog("could not perform udp listen");
+				errLog("Server has crashed.");
 				continue;
 			}
 		}
 	}
+    public static boolean push(TextMessage txt) {
+        msgQueue.add(txt);
+        return true;
+    }
     //This method is used for PUT requests when sending
 	private void handleTextMessageInterrupt(byte [] bytes) {
 		TextMessage msg = new TextMessage();
