@@ -57,16 +57,24 @@ public class TextMessageServer implements TextMessageCallback{
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
 				client = socks.accept();
-                errLog("Client has landed:" + clientCount);
+                errLog("Now serving:" + clientCount);
                 clientCount++;
 
-
                 InputStream in   = client.getInputStream();
+
+                int buffReceiveSize = 100;
+
+                byte []  header = new byte[buffReceiveSize];
+                int count = in.read(header, 0, buffReceiveSize);
+                String clientRequest = new String(header); //request header
+
+                while (count > 0) {
+                    header = new byte[buffReceiveSize];
+                    count = in.read(header, 0, buffReceiveSize);
+                    clientRequest += new String(header);
+                }
                 //TODO: determine if PUT or GET
                 //if PUT, create a new textmessage from the JSON payload and add that msgQueue, then send it using handleTextMEssageInterrupt
-
-                byte []  header = new byte[1000];
-                int count = in.read(header, 0, 1000);
 
                 OutputStream out = client.getOutputStream();
                 String JSON_PAYLOAD = "HTTP/1.1 200 OK\nContent-Type: application/json\nConnection: keep-alive\n" +
