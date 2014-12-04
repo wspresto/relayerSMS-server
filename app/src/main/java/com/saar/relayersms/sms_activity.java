@@ -47,14 +47,11 @@ public class sms_activity extends Activity {
     }
 
 
-
     private void log(String line) {
 	System.out.println(line);
     }
     public void killServer(View e) {
         unregisterReceiver(callbackSMS);
-        serverSMS.destroy();
-
         finish();
     }
 

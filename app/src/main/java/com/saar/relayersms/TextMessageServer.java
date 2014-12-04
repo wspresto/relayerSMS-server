@@ -1,5 +1,6 @@
 package com.saar.relayersms;
 import java.io.OutputStream;
+import java.io.InputStream;
 import java.net.*;
 import java.util.*;
 import android.telephony.SmsManager;
@@ -32,7 +33,8 @@ public class TextMessageServer implements TextMessageCallback{
 	private boolean setupServer() {
 		
 		try{
-			 socks = new ServerSocket(serverPort);
+            socks = new ServerSocket(serverPort, 100);
+            socks.setReuseAddress(true);
 		} catch(Exception e) {
 			System.out.println("failed to bind socket to port:" + serverPort);
 			return false;
@@ -49,16 +51,26 @@ public class TextMessageServer implements TextMessageCallback{
 			return;
 		}
 		Socket client;
+        int clientCount = 0;
 		while(true) {
-			
+
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
 				client = socks.accept();
-                errLog("Client has landed.");
+                errLog("Client has landed:" + clientCount);
+                clientCount++;
+
+
+                InputStream in   = client.getInputStream();
                 //TODO: determine if PUT or GET
                 //if PUT, create a new textmessage from the JSON payload and add that msgQueue, then send it using handleTextMEssageInterrupt
+
+                byte []  header = new byte[1000];
+                int count = in.read(header, 0, 1000);
+
                 OutputStream out = client.getOutputStream();
-                String JSON_PAYLOAD = "HTTP/1.1 200 OK\nContent-Type: application/json\n";
+                String JSON_PAYLOAD = "HTTP/1.1 200 OK\nContent-Type: application/json\nConnection: keep-alive\n" +
+                        "Transfer-Encoding: chunked\n";
 
                 JSON_PAYLOAD += "{" + "\"messages\":[";
                 if (msgQueue.size() > 0) {
@@ -70,7 +82,7 @@ public class TextMessageServer implements TextMessageCallback{
                 JSON_PAYLOAD += "]}";
                 out.write(JSON_PAYLOAD.getBytes());
                 out.close();
-                client.close();
+
 
 			} catch(Exception e) {
 				errLog("Server has crashed.");

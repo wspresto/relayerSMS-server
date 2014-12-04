@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">RelayerSMS</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="hello_world">Accepting JSON requests at port:8080</string>
     <string name="action_settings">Settings</string>
 
 </resources>
