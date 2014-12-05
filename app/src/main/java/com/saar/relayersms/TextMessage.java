@@ -11,6 +11,9 @@ public class TextMessage {
 	char [] txt;
 	char [] header;
     private String timestamp;
+    private String author;
+    private String content;
+    private String id; //phone number
 
 	int carCount;
 	final public static int headerSize      = 80;
@@ -22,14 +25,16 @@ public class TextMessage {
 		carCount = 0;
         timestamp = new Timestamp(new Date().getTime()).toString();
 
-
 	}
-    public TextMessage(String id, String message) {
-        //TODO: rework how we use tuples.... add in id and message fields to class and keep those up to date
+    public TextMessage(String id, String message, String author, String timestamp) {
+        this.id = id;
+        this.content = message;
+        this.author = author;
+        this.timestamp = timestamp;
     }
 
 	/**
-	 * used to build the message
+	 * used to build the message when the phone receives an sms
 	 * @return the position of the next byte to be copied.
 	 */
 	public int setTextMessage(int offset, byte [] bites) {
@@ -37,13 +42,18 @@ public class TextMessage {
 		for(b = offset;b < bites.length && b < txt.length ; b++) {
 			txt[b] = (char)bites[b];
 		}
+        this.content = this.getMessage();
 		return b;
 	}
 	public void setHeader(byte [] bites) {
 		for(int b = 0;b < header.length && b < bites.length ; b++) {
 			header[b] = (char)bites[b];
-		}		
+		}
+
+        this.author = decodeSender();
+        this.id = decodeID();
 	}
+
 	public char [] getHeader() {
 		return header;
 	}
@@ -54,7 +64,7 @@ public class TextMessage {
 		
 		return tuples;
 	}
-	public String getSender() {
+	private String decodeSender() {
 		String [] tuples = getTuples();
 		String name;
 		if(tuples.length < 2)
@@ -65,7 +75,7 @@ public class TextMessage {
 		}
         return name;
 	}
-	public String getID() {
+	private String decodeID() {
 		String [] tuples = getTuples();
 		String id;
 		if(tuples.length < 2)
@@ -77,6 +87,12 @@ public class TextMessage {
 			
         return id;
 	}
+    public String getSender() {
+        return this.author;
+    }
+    public String getID() {
+        return this.id;
+    }
     public String getTimestamp() {
         return this.timestamp;
     }
@@ -96,21 +112,21 @@ public class TextMessage {
         JSON       += "\"id\"" + ":" +"\"" + this.getID() + "\"";
         return "{"+JSON+"}";
     }
-	public char [] getTxt() {
+/*	public char [] getTxt() {
 		return txt;
 	}
 	public byte [] getBytes() {
-		
+
 		byte [] bites = new byte[txt.length + header.length];
 		int b;
 		for(b = 0; b < header.length ; b++) {
 			bites[b] = (byte) header[b];
 		}
-		
+
 		for(b = 0; b < txt.length; b++) {
 			bites[b + header.length] = (byte) txt[b];
 		}
 		return bites;
-	}
+	}*/
 
 }

@@ -74,13 +74,10 @@ public class TextMessageServer implements TextMessageCallback{
         TextMessage txt = null;
         try {
             JSONObject msg = new JSONObject(json);
-            txt = new TextMessage();
-
+            txt = new TextMessage(msg.getString("id"), msg.getString("content"), msg.getString("author"), msg.getString("timestamp"));
         } catch (org.json.JSONException e) {
-
+            errLog("err parsing JSON from PUT payload!!!!!");
         }
-
-
         return txt;
     }
 	/**
@@ -131,7 +128,8 @@ public class TextMessageServer implements TextMessageCallback{
                     sendSMS(parseTextMessageJSON(new String(payload)));
                 } else {
                     //TODO: determine if /messages/ or /authors/
-                    //TODO: save author ids to sd card...
+                    //TODO: /authors/ reads back all contact information. could be a lot. BIG TODO!!!
+
                     OutputStream out = client.getOutputStream();
                     String JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
                             "Content-Type: application/json\r\n" +
