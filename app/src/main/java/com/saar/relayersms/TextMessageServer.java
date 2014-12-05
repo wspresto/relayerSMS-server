@@ -42,6 +42,13 @@ public class TextMessageServer implements TextMessageCallback{
 		
 		return true;
 	}
+    private boolean containsCRLF(String line) {
+        if (line.contains("\r\n\r\n")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 	/**
 	 * assumes socks is ready to go!
 	 * assumes server socket is already binded.
@@ -62,23 +69,28 @@ public class TextMessageServer implements TextMessageCallback{
 
                 InputStream in   = client.getInputStream();
 
-                int buffReceiveSize = 100;
+                int maxReceiveSize  = 500;
 
-                byte []  header = new byte[buffReceiveSize];
-                int count = in.read(header, 0, buffReceiveSize);
-                String clientRequest = new String(header); //request header
-
+                byte [] bite = new byte[1];
+                int count = 99999;
+                String clientRequest = ""; //request header
                 while (count > 0) {
-                    header = new byte[buffReceiveSize];
-                    count = in.read(header, 0, buffReceiveSize);
-                    clientRequest += new String(header);
+                    count = in.read(bite);
+                    errLog("checking");
+                    clientRequest += new String(bite);
+                    if (containsCRLF(clientRequest)) {
+                        break; //out
+                    }
                 }
                 //TODO: determine if PUT or GET
                 //if PUT, create a new textmessage from the JSON payload and add that msgQueue, then send it using handleTextMEssageInterrupt
+                errLog(clientRequest); //TESTING!!!
 
                 OutputStream out = client.getOutputStream();
-                String JSON_PAYLOAD = "HTTP/1.1 200 OK\nContent-Type: application/json\nConnection: keep-alive\n" +
-                        "Transfer-Encoding: chunked\n";
+                String JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
+                        "Content-Type: application/json\r\n" +
+                        "Connection: keep-alive\r\n" +
+                        "Access-Control-Allow-Origin: *\r\n\r\n";
 
                 JSON_PAYLOAD += "{" + "\"messages\":[";
                 if (msgQueue.size() > 0) {
@@ -87,8 +99,9 @@ public class TextMessageServer implements TextMessageCallback{
                         JSON_PAYLOAD += "," + msgQueue.get(t).toJSON();
                     }
                 }
-                JSON_PAYLOAD += "]}";
+                JSON_PAYLOAD += "]}\r\n";
                 out.write(JSON_PAYLOAD.getBytes());
+                in.close();
                 out.close();
 
 
