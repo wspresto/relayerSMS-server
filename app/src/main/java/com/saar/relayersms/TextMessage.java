@@ -24,10 +24,10 @@ public class TextMessage {
 
 
 	}
-	public void processHeader(byte [] bites) {
-		//TODO: glean header information... model after relational database <id,name>
-		
-	}
+    public TextMessage(String id, String message) {
+        //TODO: rework how we use tuples.... add in id and message fields to class and keep those up to date
+    }
+
 	/**
 	 * used to build the message
 	 * @return the position of the next byte to be copied.
@@ -45,7 +45,6 @@ public class TextMessage {
 		}		
 	}
 	public char [] getHeader() {
-		
 		return header;
 	}
 	private String [] getTuples() {
@@ -64,7 +63,7 @@ public class TextMessage {
 			name = tuples[0].replace((char) 0, ' ');
 			name = name.trim();
 		}
-			return name;
+        return name;
 	}
 	public String getID() {
 		String [] tuples = getTuples();
@@ -76,8 +75,7 @@ public class TextMessage {
 			id = id.trim();
 		}
 			
-			return id;
-		
+        return id;
 	}
     public String getTimestamp() {
         return this.timestamp;
@@ -94,6 +92,8 @@ public class TextMessage {
         JSON       += "\"author\"" + ":" +"\"" + this.getSender() + "\"";
         JSON       += ",";
         JSON       += "\"timestamp\"" + ":" +"\"" + this.getTimestamp() + "\"";
+        JSON       += ",";
+        JSON       += "\"id\"" + ":" +"\"" + this.getID() + "\"";
         return "{"+JSON+"}";
     }
 	public char [] getTxt() {
