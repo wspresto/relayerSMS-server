@@ -3,6 +3,8 @@ import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.*;
 import java.util.*;
+
+import android.content.Context;
 import android.telephony.SmsManager;
 import org.json.*;
 import java.util.StringTokenizer;
@@ -19,7 +21,9 @@ public class TextMessageServer implements TextMessageCallback{
 	int serverPort;
 	ServerSocket socks;
 	byte [] txt;
-	public TextMessageServer(int port) {
+    Context context;
+	public TextMessageServer(Context context, int port) {
+        this.context = context;
         msgQueue = new ArrayList<TextMessage>(); //save the txt messages for the current session
 		socks = null;
 		serverPort = port;
@@ -30,10 +34,8 @@ public class TextMessageServer implements TextMessageCallback{
 		} else {
 			return;
 		}
-		
 	}
 	private boolean setupServer() {
-		
 		try{
             socks = new ServerSocket(serverPort, 100);
             socks.setReuseAddress(true);
@@ -41,7 +43,6 @@ public class TextMessageServer implements TextMessageCallback{
 			System.out.println("failed to bind socket to port:" + serverPort);
 			return false;
 		}
-		
 		return true;
 	}
     private boolean containsCRLF(String line) {
@@ -80,6 +81,7 @@ public class TextMessageServer implements TextMessageCallback{
         }
         return txt;
     }
+
 	/**
 	 * assumes socks is ready to go!
 	 * assumes server socket is already binded.
@@ -90,8 +92,25 @@ public class TextMessageServer implements TextMessageCallback{
 		}
 		Socket client;
         int clientCount = 0;
-		while(true) {
 
+        //build address book
+        System.out.println("beginning to search for contacts"); //TESTING!!!
+        Contact [] contacts = new AddressBook(this.context).getContacts();
+
+        if (contacts.length < 1) {
+            errLog("No contacts were found. We cannot start the servlet.");
+            return;
+        } else {
+            errLog("" + contacts.length + " contacts were found.");
+        }
+        String contactsJSON = "{" + "\"contacts\":[";
+        contactsJSON += contacts[0].toJSON();
+        for (int contact = 1; contact < contacts.length; contact++) {
+            contactsJSON += "," + contacts[contact].toJSON();
+        }
+        contactsJSON += "]}\r\n";
+
+		while(true) {
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
 				client = socks.accept();
@@ -108,7 +127,6 @@ public class TextMessageServer implements TextMessageCallback{
                 String clientRequestHeader = ""; //request header
                 while (count > 0) {
                     count = in.read(bite);
-                    errLog("checking");
                     clientRequestHeader += new String(bite);
                     if (containsCRLF(clientRequestHeader)) {
                         break; //out
@@ -127,23 +145,38 @@ public class TextMessageServer implements TextMessageCallback{
                     count = in.read(payload, 0, payloadSize);
                     sendSMS(parseTextMessageJSON(new String(payload)));
                 } else {
+                    OutputStream out = client.getOutputStream();
+                    //Since this servlet only deals with JSON we can assume the content type requested is json or nothing
+                    String JSON_PAYLOAD = "";
+
                     //TODO: determine if /messages/ or /authors/
                     //TODO: /authors/ reads back all contact information. could be a lot. BIG TODO!!!
-
-                    OutputStream out = client.getOutputStream();
-                    String JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
-                            "Content-Type: application/json\r\n" +
-                            "Connection: keep-alive\r\n" +
-                            "Access-Control-Allow-Origin: *\r\n\r\n";
-
-                    JSON_PAYLOAD += "{" + "\"messages\":[";
-                    if (msgQueue.size() > 0) {
-                        JSON_PAYLOAD += msgQueue.get(0).toJSON();
-                        for(int t = 1 ; t < msgQueue.size(); t++) {
-                            JSON_PAYLOAD += "," + msgQueue.get(t).toJSON();
+                    String restURI = getValFromKey(headerMap, "GET");
+                    if (restURI.equalsIgnoreCase("/messages/")) {
+                        JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
+                                "Content-Type: application/json\r\n" +
+                                "Connection: keep-alive\r\n" +
+                                "Access-Control-Allow-Origin: *\r\n\r\n";
+                        JSON_PAYLOAD += "{" + "\"messages\":[";
+                        if (msgQueue.size() > 0) {
+                            JSON_PAYLOAD += msgQueue.get(0).toJSON();
+                            for(int t = 1 ; t < msgQueue.size(); t++) {
+                                JSON_PAYLOAD += "," + msgQueue.get(t).toJSON();
+                            }
                         }
+                        JSON_PAYLOAD += "]}\r\n";
+                    } else if (restURI.equalsIgnoreCase("/contacts/")) {
+                        JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
+                                "Content-Type: application/json\r\n" +
+                                "Connection: keep-alive\r\n" +
+                                "Access-Control-Allow-Origin: *\r\n\r\n";
+                        JSON_PAYLOAD += contactsJSON;
+
+                    } else {
+                        JSON_PAYLOAD = "HTTP/1.1 404 File Not Found\r\n"+
+                                "Access-Control-Allow-Origin: *\r\n\r\n";
                     }
-                    JSON_PAYLOAD += "]}\r\n";
+
                     out.write(JSON_PAYLOAD.getBytes());
                     out.close();
                 }

@@ -1,7 +1,9 @@
 package com.saar.relayersms;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+import android.provider.Contacts;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -26,11 +28,12 @@ public class sms_activity extends Activity {
     private final int incomingPort = 8080; //sms messages from the world
 
     private class IncomingThread extends Thread{ //sms messages to the world, incoming from netbook
-        public IncomingThread() {
-
+        Context context;
+        public IncomingThread(Context context) {
+            this.context = context;
         }
         public void run() {
-            new TextMessageServer(incomingPort);
+            new TextMessageServer(context, incomingPort);
         }
     }
     /**
@@ -88,7 +91,7 @@ public class sms_activity extends Activity {
             log("We are not currently the default messaging app");
         }
         acceptSMS();
-        serverSMS = new IncomingThread();
+        serverSMS = new IncomingThread(this);
         serverSMS.start();
     }
 }
