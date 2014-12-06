@@ -25,11 +25,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b834fd57-bbb6-4968-8469-4852b682966b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/AddressBook.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/Contact.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/intermediates/model_data.bin" afterPath="$PROJECT_DIR$/build/intermediates/model_data.bin" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/TextMessageServer.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/TextMessageServer.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/sms_activity.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/sms_activity.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/AddressBook.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/AddressBook.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="relayerSMS-server.iws" />
@@ -83,13 +79,13 @@
       <file leaf-file-name="AddressBook.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/AddressBook.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.73170733" vertical-offset="165" max-vertical-offset="1185">
-              <caret line="25" column="38" selection-start-line="25" selection-start-column="38" selection-end-line="25" selection-end-column="38" />
+            <state vertical-scroll-proportion="0.4703833" vertical-offset="165" max-vertical-offset="1185">
+              <caret line="20" column="27" selection-start-line="20" selection-start-column="27" selection-end-line="20" selection-end-column="27" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#391#392#0" expanded="true" />
                 <element signature="e#429#430#0" expanded="true" />
-                <element signature="e#1326#1335#0" expanded="true" />
+                <element signature="e#1333#1342#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -1315,7 +1311,11 @@
       <created>1417815316419</created>
       <updated>1417815316419</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Stalled on getting all contacts and phone numbers. That is actually very challenging. Some contacts have numbers. Others dont, and even still others say they have numbers but then that number is not present.">
+      <created>1417899180967</created>
+      <updated>1417899180967</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -1373,7 +1373,8 @@
     <MESSAGE value="Servlet is responding with correct GET response headers now. Content encoding chunked was making the client think it never received anything..." />
     <MESSAGE value="Servlet is almost ready to receive PUT requests. Text message class needs to be reworked." />
     <MESSAGE value="Servlet ready for put testing." />
-    <option name="LAST_COMMIT_MESSAGE" value="Servlet ready for put testing." />
+    <MESSAGE value="Stalled on getting all contacts and phone numbers. That is actually very challenging. Some contacts have numbers. Others dont, and even still others say they have numbers but then that number is not present." />
+    <option name="LAST_COMMIT_MESSAGE" value="Stalled on getting all contacts and phone numbers. That is actually very challenging. Some contacts have numbers. Others dont, and even still others say they have numbers but then that number is not present." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1850,13 +1851,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/saar/relayersms/AddressBook.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.73170733" vertical-offset="165" max-vertical-offset="1185">
-          <caret line="25" column="38" selection-start-line="25" selection-start-column="38" selection-end-line="25" selection-end-column="38" />
+        <state vertical-scroll-proportion="0.4703833" vertical-offset="165" max-vertical-offset="1185">
+          <caret line="20" column="27" selection-start-line="20" selection-start-column="27" selection-end-line="20" selection-end-column="27" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#391#392#0" expanded="true" />
             <element signature="e#429#430#0" expanded="true" />
-            <element signature="e#1326#1335#0" expanded="true" />
+            <element signature="e#1333#1342#0" expanded="true" />
           </folding>
         </state>
       </provider>
