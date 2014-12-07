@@ -54,16 +54,23 @@ public class InterruptSMS extends BroadcastReceiver {
                     sms.setTextMessage(0, str.getBytes());
 
                     String address = ContactName + "," + smsmsg.getOriginatingAddress();
-
                     sms.setHeader(address.getBytes());
-
                     TextMessageServer.push(sms);
 
 
 /*                    errLog("TEXT:" + str);
                     errLog("SentBy:" + ContactName);*/
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    String ContactName = "Unknown";
+
+                    TextMessage sms = new TextMessage();
+                    sms.setTextMessage(0, str.getBytes());
+
+                    String address = ContactName + "," + smsmsg.getOriginatingAddress();
+
+                    sms.setHeader(address.getBytes());
+
+                    TextMessageServer.push(sms);
                 }finally{
                     c.close();
                 }

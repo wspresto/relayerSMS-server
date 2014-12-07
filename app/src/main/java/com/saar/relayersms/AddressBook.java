@@ -55,8 +55,8 @@ public class AddressBook {
                 //System.out.println(name + " does not have a number");
                 continue;
             }
-            contact = new Contact(name, number);
-            if (isValidPhoneNumber(cleanPhoneNumber(contact.getID()))) {
+            contact = new Contact(name, cleanPhoneNumber(number));
+            if (isValidPhoneNumber(contact.getID())) {
                 contacts.add(contact);
             }
         }
@@ -74,15 +74,15 @@ public class AddressBook {
     }
     public static String cleanPhoneNumber(String digits) {
         digits = digits.trim(); //clean whitespaces
-        char [] funnyStuff = new char[] {'-', '#', ' ', '(', ')'};
-        for (char replaceMe : funnyStuff) {
-            digits = digits.replace(replaceMe, '\0');
+        String [] funnyStuff = new String[] {"-", "#", " ", "\\(", "\\)"};
+        for (String replaceMe : funnyStuff) { //no funny stuff ok
+            digits = digits.replaceAll(replaceMe, "");
         }
 
         return digits;
     }
     public static boolean isValidPhoneNumber(String digits) {
         int len = digits.length();
-        return (len == 7 || len == 10 || len == 11);
+        return (len >= 7);
     }
 }
