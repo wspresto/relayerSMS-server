@@ -39,6 +39,7 @@ public class AddressBook {
         //Cursor numbers = context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         ArrayList<Contact> contacts = new ArrayList<Contact>();
 
+        Contact contact;
         String name;
         String number;
         int nameFieldColumnIndex;
@@ -49,15 +50,16 @@ public class AddressBook {
 
             if (Integer.parseInt(people.getString(people.getColumnIndex(ContactsContract.PhoneLookup.HAS_PHONE_NUMBER))) > 0) {
                 number = this.getPhoneNumber(people.getString(people.getColumnIndex(ContactsContract.PhoneLookup._ID)));
-                System.out.println(name + " has number " + number);
+                //System.out.println(name + " has number " + number);
             } else {
-                System.out.println(name + " does not have a number");
+                //System.out.println(name + " does not have a number");
                 continue;
             }
-
-            contacts.add(new Contact(name, number));
+            contact = new Contact(name, number);
+            if (isValidPhoneNumber(cleanPhoneNumber(contact.getID()))) {
+                contacts.add(contact);
+            }
         }
-
         people.close();
         if (contacts.size() < 1) {
             return new Contact[0];
@@ -69,5 +71,18 @@ public class AddressBook {
             return objs; //throw the book at em~!
         }
 
+    }
+    public static String cleanPhoneNumber(String digits) {
+        digits = digits.trim(); //clean whitespaces
+        char [] funnyStuff = new char[] {'-', '#', ' ', '(', ')'};
+        for (char replaceMe : funnyStuff) {
+            digits = digits.replace(replaceMe, '\0');
+        }
+
+        return digits;
+    }
+    public static boolean isValidPhoneNumber(String digits) {
+        int len = digits.length();
+        return (len == 7 || len == 10 || len == 11);
     }
 }

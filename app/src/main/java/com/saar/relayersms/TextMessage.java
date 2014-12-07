@@ -82,7 +82,7 @@ public class TextMessage {
 			return "";
 		else {
 			id = tuples[1];
-			id = id.trim();
+			id = AddressBook.cleanPhoneNumber(id);
 		}
 			
         return id;
@@ -109,7 +109,7 @@ public class TextMessage {
         JSON       += ",";
         JSON       += "\"timestamp\"" + ":" +"\"" + this.getTimestamp() + "\"";
         JSON       += ",";
-        JSON       += "\"id\"" + ":" +"\"" + this.getID() + "\"";
+        JSON       += "\"number\"" + ":" +"\"" + this.getID() + "\"";
         return "{"+JSON+"}";
     }
 /*	public char [] getTxt() {

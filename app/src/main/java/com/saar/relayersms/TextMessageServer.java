@@ -7,7 +7,6 @@ import java.util.*;
 import android.content.Context;
 import android.telephony.SmsManager;
 import org.json.*;
-import java.util.StringTokenizer;
 
 /**
  * TMS will receive sms notifications.
@@ -86,8 +85,8 @@ public class TextMessageServer implements TextMessageCallback{
 	 * assumes socks is ready to go!
 	 * assumes server socket is already binded.
 	 */
-	private void runServer() {
-		if(!socks.isBound()) {
+    private void runServer() {
+        if(!socks.isBound()) {
 			return;
 		}
 		Socket client;
@@ -109,7 +108,6 @@ public class TextMessageServer implements TextMessageCallback{
             contactsJSON += "," + contacts[contact].toJSON();
         }
         contactsJSON += "]}\r\n";
-
 		while(true) {
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
@@ -149,8 +147,8 @@ public class TextMessageServer implements TextMessageCallback{
                     //Since this servlet only deals with JSON we can assume the content type requested is json or nothing
                     String JSON_PAYLOAD = "";
 
-                    //TODO: determine if /messages/ or /authors/
-                    //TODO: /authors/ reads back all contact information. could be a lot. BIG TODO!!!
+                    //DONE: determine if /messages/ or /authors/
+                    //DONE: /authors/ reads back all contact information. could be a lot.
                     String restURI = getValFromKey(headerMap, "GET");
                     if (restURI.equalsIgnoreCase("/messages/")) {
                         JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
@@ -171,12 +169,10 @@ public class TextMessageServer implements TextMessageCallback{
                                 "Connection: keep-alive\r\n" +
                                 "Access-Control-Allow-Origin: *\r\n\r\n";
                         JSON_PAYLOAD += contactsJSON;
-
                     } else {
                         JSON_PAYLOAD = "HTTP/1.1 404 File Not Found\r\n"+
                                 "Access-Control-Allow-Origin: *\r\n\r\n";
                     }
-
                     out.write(JSON_PAYLOAD.getBytes());
                     out.close();
                 }
@@ -213,7 +209,6 @@ public class TextMessageServer implements TextMessageCallback{
     public void sendSMS(TextMessage msg) {
         SmsManager mail = SmsManager.getDefault();
         mail.sendTextMessage(msg.getID(), null, msg.getMessage(), null, null);
-
     }
     private void errLog(String line) {
         System.out.println(line);
