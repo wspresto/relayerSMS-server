@@ -70,21 +70,17 @@ public class TextMessageServer implements TextMessageCallback{
         }
         return "";
     }
+
     private TextMessage parseTextMessageJSON(String json) {
         TextMessage txt = null;
         try {
             JSONObject msg = new JSONObject(json);
-            txt = new TextMessage(msg.getString("id"), msg.getString("content"), msg.getString("author"), msg.getString("timestamp"));
+            txt = new TextMessage(msg.getString("id"), msg.getString("content"), msg.getString("author"), msg.getString("recipient"), msg.getString("timestamp"));
         } catch (org.json.JSONException e) {
             errLog("err parsing JSON from PUT payload!!!!!");
         }
         return txt;
     }
-
-	/**
-	 * assumes socks is ready to go!
-	 * assumes server socket is already binded.
-	 */
     private void runServer() {
         if(!socks.isBound()) {
 			return;
@@ -94,20 +90,9 @@ public class TextMessageServer implements TextMessageCallback{
 
         //build address book
         System.out.println("beginning to search for contacts"); //TESTING!!!
-        Contact [] contacts = new AddressBook(this.context).getContacts();
-
-        if (contacts.length < 1) {
-            errLog("No contacts were found. We cannot start the servlet.");
-            return;
-        } else {
-            errLog("" + contacts.length + " contacts were found.");
-        }
-        String contactsJSON = "{" + "\"contacts\":[";
-        contactsJSON += contacts[0].toJSON();
-        for (int contact = 1; contact < contacts.length; contact++) {
-            contactsJSON += "," + contacts[contact].toJSON();
-        }
-        contactsJSON += "]}\r\n";
+        String contactsJSON = buildContactsJSON();
+        System.out.println("begin reading all sms messages");
+        String oldTxtJSON = buildOldTxtJSON();
 		while(true) {
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
@@ -169,6 +154,12 @@ public class TextMessageServer implements TextMessageCallback{
                                 "Connection: keep-alive\r\n" +
                                 "Access-Control-Allow-Origin: *\r\n\r\n";
                         JSON_PAYLOAD += contactsJSON;
+                    } else if (restURI.equalsIgnoreCase("/messages-history/")) {
+                        JSON_PAYLOAD = "HTTP/1.1 200 OK\r\n"+
+                                "Content-Type: application/json\r\n" +
+                                "Connection: keep-alive\r\n" +
+                                "Access-Control-Allow-Origin: *\r\n\r\n";
+                        JSON_PAYLOAD += oldTxtJSON;
                     } else {
                         JSON_PAYLOAD = "HTTP/1.1 404 File Not Found\r\n"+
                                 "Access-Control-Allow-Origin: *\r\n\r\n";
@@ -186,6 +177,40 @@ public class TextMessageServer implements TextMessageCallback{
     public static boolean push(TextMessage txt) {
         msgQueue.add(txt);
         return true;
+    }
+    private String buildOldTxtJSON() {
+        TextMessage [] txts = new TextMessageHistoryBook(this.context).getTexts();
+        if (txts.length < 1) {
+            errLog("Previous text messages were not read!!!");
+            return "{\"messages\":[]}\r\n";
+        } else {
+            String JSON = "{" + "\"messages\":[";
+            JSON += txts[0].toJSON();
+            for (int txt = 1; txt < txts.length; txt++) {
+                JSON += "," + txts[txt].toJSON();
+            }
+            JSON += "]}\r\n";
+            return JSON;
+        }
+    }
+    private String buildContactsJSON() {
+        Contact [] contacts = new AddressBook(this.context).getContacts();
+
+        if (contacts.length < 1) {
+            errLog("No contacts were found. We cannot start the servlet.");
+            return "{" + "\"contacts\":[" + "]}\r\n";
+        } else {
+            errLog("" + contacts.length + " contacts were found.");
+        }
+
+        String contactsJSON = "{" + "\"contacts\":[";
+        contactsJSON += contacts[0].toJSON();
+        for (int contact = 1; contact < contacts.length; contact++) {
+            contactsJSON += "," + contacts[contact].toJSON();
+        }
+        contactsJSON += "]}\r\n";
+
+        return contactsJSON;
     }
     //This method is deprecated
 /*	private void createSMS(byte [] bytes) {

@@ -13,28 +13,9 @@ import java.util.StringTokenizer; //a llist
  */
 public class AddressBook {
     Context context = null;
+    Contact [] contacts;
     public AddressBook(Context context) {
         this.context = context;
-    }
-    private String getPhoneNumber(String id)
-    {
-        String number = "";
-        Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null);
-
-        if(phones.getCount() > 0)
-        {
-            while(phones.moveToNext())
-            {
-                number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-            }
-        }
-
-        phones.close();
-
-        return number;
-    }
-    public Contact [] getContacts() {
         Cursor people = context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         //Cursor numbers = context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         ArrayList<Contact> contacts = new ArrayList<Contact>();
@@ -62,15 +43,33 @@ public class AddressBook {
         }
         people.close();
         if (contacts.size() < 1) {
-            return new Contact[0];
+            this.contacts = new Contact[0];
         } else {
             Contact [] objs = new Contact[contacts.size()];
             for (int c = 0; c < contacts.size(); c++) {
                 objs[c] = contacts.get(c);
             }
-            return objs; //throw the book at em~!
+            this.contacts = objs; //throw the book at em~!
         }
 
+    }
+    private String getPhoneNumber(String id)
+    {
+        String number = "";
+        Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null);
+
+        if(phones.getCount() > 0)
+        {
+            while(phones.moveToNext())
+            {
+                number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            }
+        }
+        phones.close();
+        return number;
+    }
+    public Contact [] getContacts() {
+        return this.contacts;
     }
     public static String cleanPhoneNumber(String digits) {
         digits = digits.trim(); //clean whitespaces
@@ -78,7 +77,6 @@ public class AddressBook {
         for (String replaceMe : funnyStuff) { //no funny stuff ok
             digits = digits.replaceAll(replaceMe, "");
         }
-
         return digits;
     }
     public static boolean isValidPhoneNumber(String digits) {

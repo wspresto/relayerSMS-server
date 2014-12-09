@@ -12,6 +12,7 @@ public class TextMessage {
 	char [] header;
     private String timestamp;
     private String author;
+    private String recipient; //default value
     private String content;
     private String id; //phone number
 
@@ -19,17 +20,30 @@ public class TextMessage {
 	final public static int headerSize      = 80;
 	final public static int textMessageSize = 160;
 
+    /**
+     * This contstructor is primarily used for when SMS' arrive
+     */
 	public TextMessage() {
 		txt    = new char[textMessageSize]; //limit of 160 characters
 		header = new char[headerSize];
 		carCount = 0;
         timestamp = new Timestamp(new Date().getTime()).toString();
-
+        this.recipient = "Me";
 	}
-    public TextMessage(String id, String message, String author, String timestamp) {
+
+    /**
+     * This method is the entry point for sending a new text message
+     * @param id
+     * @param message
+     * @param author
+     * @param recipient
+     * @param timestamp
+     */
+    public TextMessage(String id, String message, String author, String recipient, String timestamp) {
         this.id = id;
         this.content = message;
         this.author = author;
+        this.recipient = recipient;
         this.timestamp = timestamp;
     }
 
@@ -93,6 +107,9 @@ public class TextMessage {
     public String getID() {
         return this.id;
     }
+    public String getRecipient() {
+        return this.recipient;
+    }
     public String getTimestamp() {
         return this.timestamp;
     }
@@ -110,6 +127,8 @@ public class TextMessage {
         JSON       += "\"timestamp\"" + ":" +"\"" + this.getTimestamp() + "\"";
         JSON       += ",";
         JSON       += "\"number\"" + ":" +"\"" + this.getID() + "\"";
+        JSON       += ",";
+        JSON       += "\"recipient\"" + ":" +"\"" + this.getID() + "\"";
         return "{"+JSON+"}";
     }
 /*	public char [] getTxt() {
