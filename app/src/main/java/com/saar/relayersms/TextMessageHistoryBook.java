@@ -3,6 +3,7 @@ package com.saar.relayersms;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.ContactsContract;
 
 import java.util.ArrayList;
 
@@ -11,21 +12,35 @@ import java.util.ArrayList;
  */
 public class TextMessageHistoryBook {
     TextMessage [] smsHistory;
-    public TextMessageHistoryBook(Context context) {
+    public TextMessageHistoryBook(Context context, AddressBook contacts) {
         ArrayList<TextMessage> txts = new ArrayList<TextMessage>();
-        String [] whereColsEqual = {"_id", "body", "address","date"};
+        String [] whereColsEqual = {"address", "body", "date", "_id"};
         Cursor cursor = context.getContentResolver().query(Uri.parse("content://sms/inbox"), whereColsEqual, null, null, null);
+        String number = "";
+        String body   = "";
+        String time   = "";
+        String name   = "";
         cursor.moveToFirst();
 
         do {
-            txts.add(new TextMessage(cursor.getString(0), cursor.getString(1), cursor.getString(2), "Me", cursor.getString(3)));
+            number = AddressBook.cleanPhoneNumber(cursor.getString(0));
+            body   = TextMessage.escapeJSON(cursor.getString(1));
+            name   = contacts.getContactByNumber(number);
+            time   = cursor.getString(2);
+            txts.add(new TextMessage(number,body, name, "Me", time));
         } while (cursor.moveToNext());
+        cursor.close();
         cursor = context.getContentResolver().query(Uri.parse("content://sms/sent"), whereColsEqual, null, null, null);
         cursor.moveToFirst();
 
         do {
-            txts.add(new TextMessage(cursor.getString(0), cursor.getString(1), "Me", cursor.getString(2), cursor.getString(3)));
+            number = AddressBook.cleanPhoneNumber(cursor.getString(0));
+            body   = TextMessage.escapeJSON(cursor.getString(1));
+            name   = contacts.getContactByNumber(number);
+            time   = cursor.getString(2);
+            txts.add(new TextMessage(number, body, "Me", name, time));
         } while (cursor.moveToNext());
+        cursor.close();
 
         if (txts.size() < 1) {
             this.smsHistory = new TextMessage[0];

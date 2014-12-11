@@ -51,7 +51,6 @@ public class AddressBook {
             }
             this.contacts = objs; //throw the book at em~!
         }
-
     }
     private String getPhoneNumber(String id)
     {
@@ -82,5 +81,13 @@ public class AddressBook {
     public static boolean isValidPhoneNumber(String digits) {
         int len = digits.length();
         return (len >= 7);
+    }
+    public String getContactByNumber(String number) {
+        for (Contact contact : this.contacts) {
+            if (contact.getID().equalsIgnoreCase(number)) {
+                return contact.getAuthor();
+            }
+        }
+        return "";
     }
 }

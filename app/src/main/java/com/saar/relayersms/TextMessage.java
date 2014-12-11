@@ -27,7 +27,7 @@ public class TextMessage {
 		txt    = new char[textMessageSize]; //limit of 160 characters
 		header = new char[headerSize];
 		carCount = 0;
-        timestamp = new Timestamp(new Date().getTime()).toString();
+        timestamp = "" + System.currentTimeMillis();
         this.recipient = "Me";
 	}
 
@@ -42,6 +42,7 @@ public class TextMessage {
     public TextMessage(String id, String message, String author, String recipient, String timestamp) {
         this.id = id;
         this.content = message;
+        this.txt = content.toCharArray();
         this.author = author;
         this.recipient = recipient;
         this.timestamp = timestamp;
@@ -120,7 +121,7 @@ public class TextMessage {
 		return msg;
 	}
     public String toJSON() {
-        String JSON = "\"content\"" + ":" +"\"" + this.getMessage() + "\"";
+        String JSON = "\"content\"" + ":" +"\"" + escapeJSON(this.getMessage()) + "\"";
         JSON       += ",";
         JSON       += "\"author\"" + ":" +"\"" + this.getSender() + "\"";
         JSON       += ",";
@@ -128,8 +129,15 @@ public class TextMessage {
         JSON       += ",";
         JSON       += "\"number\"" + ":" +"\"" + this.getID() + "\"";
         JSON       += ",";
-        JSON       += "\"recipient\"" + ":" +"\"" + this.getID() + "\"";
-        return "{"+JSON+"}";
+        JSON       += "\"recipient\"" + ":" +"\"" + this.getRecipient() + "\"";
+        return ("{"+JSON+"}").replace("\n", "");
+    }
+    public static String escapeJSON(String unescaped) {
+        String escaped        = unescaped.replace("\\", "\\\\");
+        escaped = escaped.replace("\"", "\\\'");
+        escaped = escaped.replace("\'", "\\\'");
+
+        return escaped;
     }
 /*	public char [] getTxt() {
 		return txt;

@@ -90,9 +90,11 @@ public class TextMessageServer implements TextMessageCallback{
 
         //build address book
         System.out.println("beginning to search for contacts"); //TESTING!!!
-        String contactsJSON = buildContactsJSON();
+        AddressBook contacts = new AddressBook(this.context);
+        String contactsJSON = buildContactsJSON(contacts);
         System.out.println("begin reading all sms messages");
-        String oldTxtJSON = buildOldTxtJSON();
+        String oldTxtJSON = buildOldTxtJSON(contacts);
+        errLog(oldTxtJSON); //TESTING!!!
 		while(true) {
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
@@ -102,7 +104,7 @@ public class TextMessageServer implements TextMessageCallback{
 
                 StringTokenizer headerMap = null;
                 InputStream in   = client.getInputStream();
-
+                OutputStream out = client.getOutputStream();
                 int maxReceiveSize  = 500;
 
                 byte [] bite = new byte[1];
@@ -121,14 +123,20 @@ public class TextMessageServer implements TextMessageCallback{
                 if (isPUT(clientRequestHeader)) {
                     int payloadSize = 0;
                     errLog("Client is asking to PUT JSON payload");
+                    String response = "HTTP/1.1 201 CREATED\r\n"+
+                            "Content-Type: application/json\r\n" +
+                            "Connection: keep-alive\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n\r\n";
                     //determine Content-Length: <decimal>
                     payloadSize = Integer.parseInt(getValFromKey(headerMap, "Content-Length"));
                     errLog("Client is sending payload of size:" + payloadSize);
                     byte [] payload = new byte[payloadSize];
                     count = in.read(payload, 0, payloadSize);
+                    out.write(response.getBytes());
+                    out.close();
                     sendSMS(parseTextMessageJSON(new String(payload)));
                 } else {
-                    OutputStream out = client.getOutputStream();
+
                     //Since this servlet only deals with JSON we can assume the content type requested is json or nothing
                     String JSON_PAYLOAD = "";
 
@@ -178,8 +186,8 @@ public class TextMessageServer implements TextMessageCallback{
         msgQueue.add(txt);
         return true;
     }
-    private String buildOldTxtJSON() {
-        TextMessage [] txts = new TextMessageHistoryBook(this.context).getTexts();
+    private String buildOldTxtJSON(AddressBook contacts) {
+        TextMessage [] txts = new TextMessageHistoryBook(this.context, contacts).getTexts();
         if (txts.length < 1) {
             errLog("Previous text messages were not read!!!");
             return "{\"messages\":[]}\r\n";
@@ -193,8 +201,8 @@ public class TextMessageServer implements TextMessageCallback{
             return JSON;
         }
     }
-    private String buildContactsJSON() {
-        Contact [] contacts = new AddressBook(this.context).getContacts();
+    private String buildContactsJSON(AddressBook book) {
+        Contact [] contacts = book.getContacts();
 
         if (contacts.length < 1) {
             errLog("No contacts were found. We cannot start the servlet.");
