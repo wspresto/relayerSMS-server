@@ -51,8 +51,17 @@ public class TextMessageServer implements TextMessageCallback{
             return false;
         }
     }
-    private boolean isPUT(String line) {
-        if (line.contains("PUT")) {
+    private boolean isPOST(String line) {
+        String [] pieces = line.split("\n");
+        if (pieces[0].contains("POST")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    private boolean isOPTIONS(String line) {
+        String [] pieces = line.split("\n");
+        if (pieces[0].contains("OPTIONS")) {
 
             return true;
         } else {
@@ -62,22 +71,48 @@ public class TextMessageServer implements TextMessageCallback{
     }
     private String getValFromKey(StringTokenizer map, String key) {
         String token = "";
+        String val = "";
+        String line = "";
         while(map.hasMoreTokens()) {
             token = map.nextToken();
             if(token.equalsIgnoreCase(key)) {
-                return map.nextToken();
+                val = map.nextToken();
+                line = val;
+                if (line.contains(",")) {
+                    while (val.contains(",")) {
+                        val = map.nextToken();
+                        line += " " + val;
+                    }
+                }
+                return line;
             }
         }
         return "";
     }
-
+    private String readClientUntilCRLF(InputStream client) {
+        String line = "";
+        byte [] bite = new byte[1];
+        int count = 99999;
+        try {
+            while (count > 0) {
+                count = client.read(bite);
+                line += new String(bite);
+                if (containsCRLF(line)) {
+                    break; //out
+                }
+            }
+        } catch(Exception eeeeee) {
+            return "";
+        }
+        return line;
+    }
     private TextMessage parseTextMessageJSON(String json) {
         TextMessage txt = null;
         try {
             JSONObject msg = new JSONObject(json);
-            txt = new TextMessage(msg.getString("id"), msg.getString("content"), msg.getString("author"), msg.getString("recipient"), msg.getString("timestamp"));
+            txt = new TextMessage(msg.getString("number"), msg.getString("content"), msg.getString("author"), msg.getString("recipient"), msg.getString("timestamp"));
         } catch (org.json.JSONException e) {
-            errLog("err parsing JSON from PUT payload!!!!!");
+            errLog("err parsing JSON from POST payload!!!!!");
         }
         return txt;
     }
@@ -94,7 +129,6 @@ public class TextMessageServer implements TextMessageCallback{
         String contactsJSON = buildContactsJSON(contacts);
         System.out.println("begin reading all sms messages");
         String oldTxtJSON = buildOldTxtJSON(contacts);
-        errLog(oldTxtJSON); //TESTING!!!
 		while(true) {
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
@@ -107,34 +141,61 @@ public class TextMessageServer implements TextMessageCallback{
                 OutputStream out = client.getOutputStream();
                 int maxReceiveSize  = 500;
 
-                byte [] bite = new byte[1];
-                int count = 99999;
-                String clientRequestHeader = ""; //request header
-                while (count > 0) {
-                    count = in.read(bite);
-                    clientRequestHeader += new String(bite);
-                    if (containsCRLF(clientRequestHeader)) {
-                        break; //out
+
+                String clientRequestHeader = readClientUntilCRLF(in); //request header
+                headerMap = new StringTokenizer(clientRequestHeader);
+                //determine if POST or GET
+                //if POST, create a new text message from the JSON payload and add that msgQueue, then send it using handleTextMEssageInterrupt
+                if (isPOST(clientRequestHeader)) {
+                    String restURI = getValFromKey(headerMap, "POST");
+                    String JSON = "";
+                    if (restURI.equals("/message/")) {
+                        int payloadSize = 0;
+                        errLog("Client is asking to POST JSON payload");
+
+                        String response = "HTTP/1.1 201 CREATED\r\n"+
+                                "Content-Type: application/json\r\n" +
+                                "Connection: keep-alive\r\n" +
+                                "Access-Control-Allow-Origin: *\r\n\r\n";
+
+                        //determine Content-Length: <decimal>
+                        String contentLength = getValFromKey(headerMap, "Content-Length:");
+                        if (contentLength.length() < 1) {
+                            errLog("Client is sending payload of size: who knows?");
+                            response = "HTTP/1.1 404 File Not Found\r\n"+
+                                    "Access-Control-Allow-Origin: *\r\n\r\n";
+                        } else {
+                            payloadSize = Integer.parseInt(contentLength);
+                            errLog("Client is sending payload of size:" + payloadSize);
+                            byte [] payload = new byte[payloadSize];
+                            int count = in.read(payload, 0, payloadSize);
+                            if (count > 0) {
+                                JSON = new String(payload);
+                                errLog("Client posted this: " + JSON);
+                            } else {
+                                errLog("Client posted nothing...");
+                            }
+
+                        }
+
+                        out.write(response.getBytes());
+                        out.close();
+                        sendSMS(parseTextMessageJSON(JSON));
                     }
-                }
-                headerMap =  new StringTokenizer(clientRequestHeader);
-                //determine if PUT or GET
-                //if PUT, create a new text message from the JSON payload and add that msgQueue, then send it using handleTextMEssageInterrupt
-                if (isPUT(clientRequestHeader)) {
-                    int payloadSize = 0;
-                    errLog("Client is asking to PUT JSON payload");
-                    String response = "HTTP/1.1 201 CREATED\r\n"+
-                            "Content-Type: application/json\r\n" +
-                            "Connection: keep-alive\r\n" +
-                            "Access-Control-Allow-Origin: *\r\n\r\n";
-                    //determine Content-Length: <decimal>
-                    payloadSize = Integer.parseInt(getValFromKey(headerMap, "Content-Length"));
-                    errLog("Client is sending payload of size:" + payloadSize);
-                    byte [] payload = new byte[payloadSize];
-                    count = in.read(payload, 0, payloadSize);
-                    out.write(response.getBytes());
-                    out.close();
-                    sendSMS(parseTextMessageJSON(new String(payload)));
+                } else if (isOPTIONS(clientRequestHeader)) {
+                    String restURI = getValFromKey(headerMap, "OPTIONS");
+                    if (restURI.equalsIgnoreCase("/message/")) {
+                        String responseHeader = "HTTP/1.1 200 OK\r\n" +
+                                "Access-Control-Allow-Origin: " + getValFromKey(headerMap, "Origin:") + "\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Server: relayerServlet (Java)\r\n" +
+                                "Connection: Keep-Alive\r\n" +
+                                "Content-Type: application/json\r\n" +
+                                "Access-Control-Allow-Headers: " + getValFromKey(headerMap, "Access-Control-Request-Headers:") + "\r\n" +
+                                "Access-Control-Allow-Methods: " + getValFromKey(headerMap, "Access-Control-Request-Method")  + "\r\n\r\n";
+                        out.write(responseHeader.getBytes());
+                        out.close();
+                    }
                 } else {
 
                     //Since this servlet only deals with JSON we can assume the content type requested is json or nothing

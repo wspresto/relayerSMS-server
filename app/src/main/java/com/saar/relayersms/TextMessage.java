@@ -135,7 +135,7 @@ public class TextMessage {
     public static String escapeJSON(String unescaped) {
         String escaped        = unescaped.replace("\\", "\\\\");
         escaped = escaped.replace("\"", "\\\'");
-        escaped = escaped.replace("\'", "\\\'");
+        //escaped = escaped.replace("\'", "\\\'");
 
         return escaped;
     }
