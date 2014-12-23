@@ -15,7 +15,7 @@ public class TextMessage {
     private String recipient; //default value
     private String content;
     private String id; //phone number
-
+    private boolean isUnRead = true;
 	int carCount;
 	final public static int headerSize      = 80;
 	final public static int textMessageSize = 160;
@@ -120,6 +120,16 @@ public class TextMessage {
 		msg        = msg.trim();
 		return msg;
 	}
+    public String isMessageNew() {
+        if (this.isUnRead) {
+            return "true";
+        } else {
+            return "false";
+        }
+    }
+    public void markAsRead() {
+        this.isUnRead = false;
+    }
     public String toJSON() {
         String JSON = "\"content\"" + ":" +"\"" + escapeJSON(this.getMessage()) + "\"";
         JSON       += ",";
@@ -130,6 +140,8 @@ public class TextMessage {
         JSON       += "\"number\"" + ":" +"\"" + this.getID() + "\"";
         JSON       += ",";
         JSON       += "\"recipient\"" + ":" +"\"" + this.getRecipient() + "\"";
+        JSON       += ",";
+        JSON       += "\"isUnRead\"" + ":" +"\"" + this.isMessageNew() + "\"";
         return ("{"+JSON+"}").replace("\n", "");
     }
     public static String escapeJSON(String unescaped) {

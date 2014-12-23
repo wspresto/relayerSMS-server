@@ -211,9 +211,12 @@ public class TextMessageServer implements TextMessageCallback{
                                 "Access-Control-Allow-Origin: *\r\n\r\n";
                         JSON_PAYLOAD += "{" + "\"messages\":[";
                         if (msgQueue.size() > 0) {
+
                             JSON_PAYLOAD += msgQueue.get(0).toJSON();
+                            msgQueue.get(0).markAsRead();
                             for(int t = 1 ; t < msgQueue.size(); t++) {
                                 JSON_PAYLOAD += "," + msgQueue.get(t).toJSON();
+                                msgQueue.get(t).markAsRead();
                             }
                         }
                         JSON_PAYLOAD += "]}\r\n";

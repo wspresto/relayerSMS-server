@@ -17,6 +17,7 @@ import android.os.PowerManager.WakeLock;
 
 import android.provider.Telephony;
 import android.view.View;
+import android.widget.TextView;
 
 
 public class sms_activity extends Activity {
@@ -26,7 +27,8 @@ public class sms_activity extends Activity {
     private IntentFilter infil;
     IncomingThread serverSMS;
     private final int incomingPort = 8080; //sms messages from the world
-
+    public static boolean isServerAlive = false;
+    private Activity that = null; //
     private class IncomingThread extends Thread{ //sms messages to the world, incoming from netbook
         Context context;
         public IncomingThread(Context context) {
@@ -49,13 +51,18 @@ public class sms_activity extends Activity {
         registerReceiver(callbackSMS, infil);
     }
 
-
     private void log(String line) {
 	System.out.println(line);
     }
+
     public void killServer(View e) {
-        unregisterReceiver(callbackSMS);
-        finish();
+        if (isServerAlive) {
+            isServerAlive = false;
+            unregisterReceiver(callbackSMS);
+            //finish();
+        }
+        android.os.Process.killProcess(android.os.Process.myPid());
+        System.exit(1);
     }
 
     @Override
@@ -85,13 +92,12 @@ public class sms_activity extends Activity {
     }
 
     public void init() {
-        if (Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName())) {
-            log("We are the default messaging app");
-        } else {
-            log("We are not currently the default messaging app");
+        if (!isServerAlive) {
+            isServerAlive = true;
+
+            acceptSMS();
+            serverSMS = new IncomingThread(this);
+            serverSMS.start();
         }
-        acceptSMS();
-        serverSMS = new IncomingThread(this);
-        serverSMS.start();
     }
 }
