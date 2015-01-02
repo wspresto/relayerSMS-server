@@ -82,12 +82,12 @@ public class AddressBook {
         int len = digits.length();
         return (len >= 7);
     }
-    public String getContactByNumber(String number) {
+    public Contact getContactByNumber(String number) {
         for (Contact contact : this.contacts) {
             if (contact.getID().equalsIgnoreCase(number)) {
-                return contact.getAuthor();
+                return contact;
             }
         }
-        return "";
+        return null;
     }
 }

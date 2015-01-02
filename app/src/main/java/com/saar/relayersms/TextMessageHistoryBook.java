@@ -21,11 +21,17 @@ public class TextMessageHistoryBook {
         String time   = "";
         String name   = "";
         cursor.moveToFirst();
+        Contact contact = null;
 
         do {
             number = AddressBook.cleanPhoneNumber(cursor.getString(0));
             body   = TextMessage.escapeJSON(cursor.getString(1));
-            name   = contacts.getContactByNumber(number);
+            contact   = contacts.getContactByNumber(number);
+            if (contact == null) {
+                continue;
+            }
+            name = contact.getAuthor();
+            contact.incrementMessages();
             time   = cursor.getString(2);
             txts.add(new TextMessage(number,body, name, "Me", time));
         } while (cursor.moveToNext());
@@ -36,7 +42,12 @@ public class TextMessageHistoryBook {
         do {
             number = AddressBook.cleanPhoneNumber(cursor.getString(0));
             body   = TextMessage.escapeJSON(cursor.getString(1));
-            name   = contacts.getContactByNumber(number);
+            contact   = contacts.getContactByNumber(number);
+            if (contact == null) {
+                continue;
+            }
+            name = contact.getAuthor();
+            contact.incrementMessages();
             time   = cursor.getString(2);
             txts.add(new TextMessage(number, body, "Me", name, time));
         } while (cursor.moveToNext());

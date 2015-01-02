@@ -124,11 +124,12 @@ public class TextMessageServer implements TextMessageCallback{
         int clientCount = 0;
 
         //build address book
-        System.out.println("beginning to search for contacts"); //TESTING!!!
+/*        System.out.println("beginning to search for contacts"); //TESTING!!!*/
         AddressBook contacts = new AddressBook(this.context);
-        String contactsJSON = buildContactsJSON(contacts);
-        System.out.println("begin reading all sms messages");
+/*
+        System.out.println("begin reading all sms messages");*/
         String oldTxtJSON = buildOldTxtJSON(contacts);
+        String contactsJSON = buildContactsJSON(contacts);
 		while(true) {
 			//assume a text message is being sent.....ie only 160 bytes to be received...
 			try {
@@ -267,18 +268,23 @@ public class TextMessageServer implements TextMessageCallback{
     }
     private String buildContactsJSON(AddressBook book) {
         Contact [] contacts = book.getContacts();
-
-        if (contacts.length < 1) {
+        ArrayList<Contact> contactsWithMessages = new ArrayList<Contact>();
+        for (Contact c : contacts) { //FILTER OUT CONTACTS WITH NO MESSAGES
+            if (c.hasMessages()) {
+                contactsWithMessages.add(c);
+            }
+        }
+        if (contactsWithMessages.size() < 1) {
             errLog("No contacts were found. We cannot start the servlet.");
             return "{" + "\"contacts\":[" + "]}\r\n";
         } else {
-            errLog("" + contacts.length + " contacts were found.");
+            errLog("" + contactsWithMessages.size() + " contacts were found.");
         }
 
         String contactsJSON = "{" + "\"contacts\":[";
-        contactsJSON += contacts[0].toJSON();
-        for (int contact = 1; contact < contacts.length; contact++) {
-            contactsJSON += "," + contacts[contact].toJSON();
+        contactsJSON += contactsWithMessages.get(0).toJSON();
+        for (int contact = 1; contact < contactsWithMessages.size(); contact++) {
+            contactsJSON += "," + contactsWithMessages.get(contact).toJSON();
         }
         contactsJSON += "]}\r\n";
 
