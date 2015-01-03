@@ -312,6 +312,7 @@ public class TextMessageServer implements TextMessageCallback{
     public void sendSMS(TextMessage msg) {
         SmsManager mail = SmsManager.getDefault();
         mail.sendTextMessage(msg.getID(), null, msg.getMessage(), null, null);
+        TextMessageServer.push(msg);
     }
     private void errLog(String line) {
         System.out.println(line);

@@ -33,7 +33,8 @@ public class TextMessageHistoryBook {
             name = contact.getAuthor();
             contact.incrementMessages();
             time   = cursor.getString(2);
-            txts.add(new TextMessage(number,body, name, "Me", time));
+            //TODO: mark text as read of its timestamp is recent by some sorta recentThreshold
+            txts.add(new TextMessage(number,body, name, "Me", time).markAsRead());
         } while (cursor.moveToNext());
         cursor.close();
         cursor = context.getContentResolver().query(Uri.parse("content://sms/sent"), whereColsEqual, null, null, null);
@@ -49,7 +50,8 @@ public class TextMessageHistoryBook {
             name = contact.getAuthor();
             contact.incrementMessages();
             time   = cursor.getString(2);
-            txts.add(new TextMessage(number, body, "Me", name, time));
+            //TODO: mark text as read of its timestamp is recent by some sorta recentThreshold
+            txts.add(new TextMessage(number, body, "Me", name, time).markAsRead());
         } while (cursor.moveToNext());
         cursor.close();
 

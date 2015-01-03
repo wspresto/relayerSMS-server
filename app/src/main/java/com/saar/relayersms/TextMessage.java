@@ -127,8 +127,9 @@ public class TextMessage {
             return "false";
         }
     }
-    public void markAsRead() {
+    public TextMessage markAsRead() {
         this.isUnRead = false;
+        return this;
     }
     public String toJSON() {
         String JSON = "\"content\"" + ":" +"\"" + escapeJSON(this.getMessage()) + "\"";
